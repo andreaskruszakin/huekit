@@ -2,126 +2,127 @@
 
 import { useState } from "react";
 import type { ColorVar, SavedPalette } from "@/components/huekit/useColorVars";
+import { IconChevron, IconPlus } from "@/components/huekit/icons";
 
 export function PalettePanel({
-  vars, selected, onSelect, onReset, onResetAll, onSave, onLoad, palettes, onExport, onEyedropper,
+  vars, selected, onSelect, onReset, onSave, onLoad, palettes,
 }: {
   vars: ColorVar[];
   selected: string | null;
   onSelect: (name: string) => void;
   onReset: (name: string) => void;
-  onResetAll: () => void;
   onSave: (name: string) => void;
   onLoad: (p: SavedPalette) => void;
   palettes: SavedPalette[];
-  onExport: () => string;
-  onEyedropper: () => void;
 }) {
   const [saveName, setSaveName] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [palettesOpen, setPalettesOpen] = useState(true);
+
+  const selectedVar = vars.find((v) => v.name === selected);
+  const selectedDirty = selectedVar && selectedVar.current !== selectedVar.original;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink">CSS variables</span>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            aria-label="Pick color from screen"
-            className="rounded-md px-2 py-1 text-[11px] text-dim hover:bg-white/6 hover:text-ink"
-            onClick={onEyedropper}
-          >
-            Dropper
-          </button>
-          <button
-            type="button"
-            className="rounded-md px-2 py-1 text-[11px] text-dim hover:bg-white/6 hover:text-ink"
-            onClick={onResetAll}
-          >
-            Reset all
-          </button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-1">
+      <div className="huekit-section-label">CSS variables</div>
 
-      <ul className="max-h-40 space-y-1 overflow-y-auto">
+      <ul className="space-y-0.5">
         {vars.map((v) => {
           const dirty = v.current !== v.original;
           return (
             <li key={v.name}>
               <button
                 type="button"
-                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[11px] ${selected === v.name ? "bg-white/10 text-ink" : "text-dim hover:bg-white/5 hover:text-ink"}`}
+                className="huekit-var-row"
+                data-selected={selected === v.name}
                 onClick={() => onSelect(v.name)}
               >
-                <span
-                  className="h-4 w-4 shrink-0 rounded-full border border-white/10"
-                  style={{ background: v.current }}
-                />
-                <span className="min-w-0 flex-1 truncate font-mono">{v.name}</span>
-                {dirty && <span className="shrink-0 text-[10px] text-amber-300/80">edited</span>}
+                <span className="huekit-swatch" style={{ background: v.current }} />
+                <span className="min-w-0 flex-1 truncate">{v.name}</span>
+                {dirty && <span className="huekit-dirty-dot" aria-label="Edited" />}
               </button>
             </li>
           );
         })}
         {vars.length === 0 && (
-          <li className="py-4 text-center text-[11px] text-dim">No color variables detected on :root</li>
+          <li className="huekit-empty">No color variables detected on :root</li>
         )}
       </ul>
 
-      {selected && (
+      {selected && selectedDirty && (
         <button
           type="button"
-          className="text-[11px] text-dim hover:text-ink"
+          className="huekit-var-row mt-1 text-[11px]"
           onClick={() => onReset(selected)}
         >
-          Reset selected to original
+          <IconResetInline />
+          <span>Reset selected</span>
         </button>
       )}
 
-      <div className="flex gap-2 border-t border-line pt-3">
+      <div className="huekit-divider flex gap-2">
         <input
           value={saveName}
           onChange={(e) => setSaveName(e.target.value)}
           placeholder="Palette name"
-          className="min-w-0 flex-1 rounded-lg border border-line bg-white/4 px-2 py-1.5 text-[11px] text-ink placeholder:text-dim"
+          className="huekit-input"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && saveName.trim()) {
+              onSave(saveName.trim());
+              setSaveName("");
+            }
+          }}
         />
         <button
           type="button"
+          aria-label="Save palette"
+          title="Save palette"
           disabled={!saveName.trim()}
-          className="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-semibold text-bg disabled:opacity-40"
+          className="huekit-toolbar-btn disabled:opacity-40"
           onClick={() => { onSave(saveName.trim()); setSaveName(""); }}
         >
-          Save
+          <IconPlus />
         </button>
       </div>
 
       {palettes.length > 0 && (
-        <ul className="max-h-24 space-y-1 overflow-y-auto">
-          {palettes.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                className="w-full rounded-lg px-2 py-1 text-left text-[11px] text-dim hover:bg-white/5 hover:text-ink"
-                onClick={() => onLoad(p)}
-              >
-                {p.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-1">
+          <button
+            type="button"
+            className="huekit-folder-header"
+            aria-expanded={palettesOpen}
+            onClick={() => setPalettesOpen((o) => !o)}
+          >
+            <IconChevron open={palettesOpen} />
+            <span>Saved palettes</span>
+            <span className="ml-auto text-[10px] font-normal text-[var(--hk-text-tertiary)]">
+              {palettes.length}
+            </span>
+          </button>
+          {palettesOpen && (
+            <ul className="mt-0.5 space-y-0.5">
+              {palettes.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className="huekit-palette-row"
+                    onClick={() => onLoad(p)}
+                  >
+                    {p.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
-
-      <button
-        type="button"
-        className="w-full rounded-lg border border-line py-2 text-[11px] text-dim hover:bg-white/5 hover:text-ink"
-        onClick={async () => {
-          await navigator.clipboard.writeText(onExport());
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        }}
-      >
-        {copied ? "Copied" : "Copy CSS block"}
-      </button>
     </div>
+  );
+}
+
+function IconResetInline() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 2.25-5.97M3 4v5h5" />
+    </svg>
   );
 }

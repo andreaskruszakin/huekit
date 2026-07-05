@@ -1,13 +1,25 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   HUES, HUE_NAMES, SHADE_LIGHTNESS, WHEEL, SPRING, SHADE_STAGGER_S, sphereFill,
 } from "@/lib/picker-preset";
-import { hslCss, parseColor, shadeScale, type Hsl } from "@/lib/huekit-color";
+import { formatColor, hslToHex, parseColor, shadeScale, type Hsl } from "@/lib/huekit-color";
+
+const FORMAT_KEY = "huekit-color-format";
+type ColorFormat = "hsl" | "hex";
 
 const rad = (deg: number) => ((deg - 90) * Math.PI) / 180;
+
+function loadFormat(): ColorFormat {
+  try {
+    const v = localStorage.getItem(FORMAT_KEY);
+    return v === "hex" ? "hex" : "hsl";
+  } catch {
+    return "hsl";
+  }
+}
 
 function HoverRing({ visible = false }: { visible?: boolean }) {
   return (
@@ -32,33 +44,64 @@ function Slider({ label, value, min, max, onChange }: {
   label: string; value: number; min: number; max: number; onChange: (v: number) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-[11px] text-dim">
-      <span className="w-3 tabular-nums">{label}</span>
+    <label className="huekit-slider-row">
+      <span>{label}</span>
       <input
         type="range"
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(+e.target.value)}
-        className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-white"
       />
-      <span className="w-7 text-right tabular-nums text-ink">{value}</span>
+      <span>{value}</span>
     </label>
   );
 }
 
+function FormatToggle({ mode, onChange }: { mode: ColorFormat; onChange: (m: ColorFormat) => void }) {
+  return (
+    <div className="huekit-format-toggle" role="group" aria-label="Color format">
+      {(["hsl", "hex"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          className="huekit-format-btn"
+          data-active={mode === m}
+          onClick={() => onChange(m)}
+        >
+          {m.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function WheelPicker({
-  hsl, onChange, varName,
+  hsl, onChange,
 }: {
   hsl: Hsl;
   onChange: (h: Hsl) => void;
-  varName: string;
 }) {
   const [activeHue, setActiveHue] = useState<number | null>(null);
+  const [format, setFormat] = useState<ColorFormat>("hsl");
+  const [hexInput, setHexInput] = useState("");
   const reduce = useReducedMotion();
   const wheelRef = useRef<HTMLDivElement>(null);
-  const size = 200;
+  const size = 180;
   const scale = size / WHEEL.size;
+
+  useEffect(() => {
+    setFormat(loadFormat());
+  }, []);
+
+  useEffect(() => {
+    setHexInput(hslToHex(hsl.h, hsl.s, hsl.l));
+  }, [hsl.h, hsl.s, hsl.l]);
+
+  function pickFormat(m: ColorFormat) {
+    setFormat(m);
+    try { localStorage.setItem(FORMAT_KEY, m); } catch { /* ignore */ }
+  }
 
   function pickHue(h: number) {
     setActiveHue(h);
@@ -70,9 +113,13 @@ export function WheelPicker({
     setActiveHue(h);
   }
 
+  function commitHex(raw: string) {
+    const parsed = parseColor(raw);
+    if (parsed) onChange(parsed);
+  }
+
   return (
-    <div className="border-t border-line pt-3">
-      <p className="mb-2 truncate text-[11px] text-dim">{varName}</p>
+    <div className="huekit-wheel-col">
       <div
         ref={wheelRef}
         className="relative mx-auto"
@@ -84,7 +131,7 @@ export function WheelPicker({
             aria-label={HUE_NAMES[h]}
             className="group absolute rounded-full"
             style={{
-              ...dotPos(WHEEL.hueRadius * scale, h, WHEEL.hueDot * scale, size / 2),
+              ...dotPos(WHEEL.hueRadius * scale, h, WHEEL.hueDot * scale * 0.92, size / 2),
               background: sphereFill(h, 82, 56),
             }}
             whileHover={reduce ? undefined : { scale: 1.14 }}
@@ -107,7 +154,7 @@ export function WheelPicker({
                     aria-label={`Shade ${i + 1}`}
                     className="pointer-events-auto absolute rounded-full"
                     style={{
-                      ...dotPos(WHEEL.shadeRadius * scale, deg, WHEEL.shadeDot * scale, size / 2),
+                      ...dotPos(WHEEL.shadeRadius * scale, deg, WHEEL.shadeDot * scale * 0.92, size / 2),
                       background: sphereFill(activeHue, 72, l),
                     }}
                     initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.3 }}
@@ -124,18 +171,43 @@ export function WheelPicker({
         </AnimatePresence>
       </div>
 
-      <div className="mt-3 space-y-1.5">
-        <Slider label="H" value={Math.round(hsl.h)} min={0} max={360} onChange={(h) => onChange({ ...hsl, h })} />
-        <Slider label="S" value={Math.round(hsl.s)} min={0} max={100} onChange={(s) => onChange({ ...hsl, s })} />
-        <Slider label="L" value={Math.round(hsl.l)} min={0} max={100} onChange={(l) => onChange({ ...hsl, l })} />
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <FormatToggle mode={format} onChange={pickFormat} />
+        <span className="huekit-color-readout" title={formatColor(hsl, format)}>
+          {formatColor(hsl, format)}
+        </span>
       </div>
 
-      <div className="mt-3 flex gap-1 overflow-x-auto pb-1">
+      {format === "hsl" ? (
+        <div className="mt-1 space-y-1">
+          <Slider label="H" value={Math.round(hsl.h)} min={0} max={360} onChange={(h) => onChange({ ...hsl, h })} />
+          <Slider label="S" value={Math.round(hsl.s)} min={0} max={100} onChange={(s) => onChange({ ...hsl, s })} />
+          <Slider label="L" value={Math.round(hsl.l)} min={0} max={100} onChange={(l) => onChange({ ...hsl, l })} />
+        </div>
+      ) : (
+        <label className="huekit-hex-input-row mt-2">
+          <span className="sr-only">Hex color</span>
+          <input
+            type="text"
+            className="huekit-hex-input"
+            value={hexInput}
+            spellCheck={false}
+            onChange={(e) => {
+              setHexInput(e.target.value);
+              commitHex(e.target.value);
+            }}
+            onBlur={() => setHexInput(hslToHex(hsl.h, hsl.s, hsl.l))}
+          />
+        </label>
+      )}
+
+      <div className="huekit-scale-grid huekit-scale-grid-compact">
         {shadeScale(hsl.h, hsl.s).map((css, i) => (
           <button
             key={i}
+            type="button"
             aria-label={`Scale step ${i + 1}`}
-            className="h-6 w-6 shrink-0 rounded-md border border-white/10"
+            className="huekit-scale-swatch"
             style={{ background: css }}
             onClick={() => {
               const parsed = parseColor(css);

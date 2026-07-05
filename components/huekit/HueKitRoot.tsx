@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { HueKitIcon } from "@/components/huekit/HueKitIcon";
+import {
+  IconClose, IconCopySwap, IconEyedropper, IconReset,
+} from "@/components/huekit/icons";
 import { PalettePanel } from "@/components/huekit/PalettePanel";
+import { ToolbarTip } from "@/components/huekit/ToolbarTip";
 import { WheelPicker } from "@/components/huekit/WheelPicker";
 import { loadBubblePos, saveBubblePos, useColorVars } from "@/components/huekit/useColorVars";
 import { parseColor } from "@/lib/huekit-color";
 import { PANEL_EXIT, SPRING } from "@/lib/picker-preset";
+import "./huekit-panel.css";
 
 declare global {
   interface Window {
@@ -15,16 +20,43 @@ declare global {
   }
 }
 
+const BUBBLE_SIZE = 56;
+const PANEL_WIDTH = 280;
+const PANEL_EXPANDED = 520;
+const WHEEL_COL = 240;
+const FALLBACK_PANEL_H = 420;
+
+function visualLeft(x: number, origin: "left" | "right", open: boolean, panelW: number) {
+  if (!open || origin === "left") return x;
+  return x - (panelW - BUBBLE_SIZE);
+}
+
+function anchorFromVisualLeft(
+  visualLeftPos: number,
+  origin: "left" | "right",
+  open: boolean,
+  panelW: number,
+) {
+  if (!open || origin === "left") return visualLeftPos;
+  return visualLeftPos + (panelW - BUBBLE_SIZE);
+}
+
 export function HueKitRoot() {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ x: 16, y: 16 });
-  const drag = useRef({ dx: 0, dy: 0, active: false, moved: false });
+  const [copied, setCopied] = useState(false);
+  const drag = useRef({ dx: 0, dy: 0, active: false, moved: false, fromHeader: false });
+  const panelRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
   const {
     vars, selected, setSelected, selectedVar, resetVar, resetAll,
     savePalette, loadPalette, palettes, exportCss, setSelectedHsl,
   } = useColorVars();
+
+  const [panelOrigin, setPanelOrigin] = useState<"left" | "right">("left");
+  const expanded = !!selectedVar;
+  const panelWidth = expanded ? PANEL_EXPANDED : PANEL_WIDTH;
 
   useEffect(() => {
     const saved = loadBubblePos();
@@ -38,27 +70,74 @@ export function HueKitRoot() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
+  const getPanelHeight = useCallback(() => {
+    return panelRef.current?.getBoundingClientRect().height ?? FALLBACK_PANEL_H;
+  }, []);
+
+  const clampPos = useCallback((
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    opts?: { open?: boolean; origin?: "left" | "right" },
+  ) => {
+    const isOpen = opts?.open ?? open;
+    const origin = opts?.origin ?? panelOrigin;
+    const left = visualLeft(x, origin, isOpen, w);
+    const clampedLeft = Math.max(8, Math.min(window.innerWidth - w - 8, left));
+    const clampedX = anchorFromVisualLeft(clampedLeft, origin, isOpen, w);
+    return {
+      x: clampedX,
+      y: Math.max(8, Math.min(window.innerHeight - h - 8, y)),
+    };
+  }, [open, panelOrigin]);
+
+  const onBubblePointerDown = useCallback((e: React.PointerEvent) => {
     if (open) return;
-    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false };
+    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false, fromHeader: false };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [open, pos]);
+
+  const onHeaderPointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false, fromHeader: true };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, [pos]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!drag.current.active) return;
     drag.current.moved = true;
-    const x = Math.max(8, Math.min(window.innerWidth - 64, e.clientX - drag.current.dx));
-    const y = Math.max(8, Math.min(window.innerHeight - 64, e.clientY - drag.current.dy));
-    setPos({ x, y });
-  }, []);
+    const fromHeader = drag.current.fromHeader;
+    const w = fromHeader ? panelWidth : BUBBLE_SIZE;
+    const h = fromHeader ? getPanelHeight() : BUBBLE_SIZE;
+    const rawX = e.clientX - drag.current.dx;
+    const rawY = e.clientY - drag.current.dy;
+
+    if (fromHeader && open) {
+      const centerX = visualLeft(rawX, panelOrigin, true, panelWidth) + panelWidth / 2;
+      const nextOrigin = centerX < window.innerWidth / 2 ? "left" : "right";
+      if (nextOrigin !== panelOrigin) setPanelOrigin(nextOrigin);
+      const next = clampPos(rawX, rawY, w, h, { open: true, origin: nextOrigin });
+      setPos(next);
+      return;
+    }
+
+    const next = clampPos(rawX, rawY, w, h, { open: fromHeader ? open : false, origin: panelOrigin });
+    setPos(next);
+  }, [clampPos, panelWidth, getPanelHeight, open, panelOrigin]);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
     if (!drag.current.active) return;
     drag.current.active = false;
-    const x = Math.max(8, Math.min(window.innerWidth - 64, e.clientX - drag.current.dx));
-    const y = Math.max(8, Math.min(window.innerHeight - 64, e.clientY - drag.current.dy));
-    saveBubblePos(x, y);
-  }, []);
+    const fromHeader = drag.current.fromHeader;
+    const w = fromHeader ? panelWidth : BUBBLE_SIZE;
+    const h = fromHeader ? getPanelHeight() : BUBBLE_SIZE;
+    const rawX = e.clientX - drag.current.dx;
+    const rawY = e.clientY - drag.current.dy;
+    const next = clampPos(rawX, rawY, w, h, { open: fromHeader ? open : false, origin: panelOrigin });
+    setPos(next);
+    saveBubblePos(next.x, next.y);
+  }, [clampPos, panelWidth, getPanelHeight, open, panelOrigin]);
 
   const eyedropper = useCallback(async () => {
     if (!window.EyeDropper || !selected) return;
@@ -69,79 +148,152 @@ export function HueKitRoot() {
     } catch { /* cancelled */ }
   }, [selected, setSelectedHsl]);
 
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(exportCss());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [exportCss]);
+
+  const hasEyedropper = typeof window !== "undefined" && !!window.EyeDropper;
+  const rightOffset = panelWidth - BUBBLE_SIZE;
+
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
+    <div className="huekit-root fixed inset-0 z-50 pointer-events-none">
       <motion.div
         className="pointer-events-auto absolute"
         style={{ left: pos.x, top: pos.y }}
         drag={false}
       >
         {!open && (
-          <button
+          <motion.button
             type="button"
             aria-label="Open HueKit"
             aria-expanded={open}
-            className="cursor-grab touch-none active:cursor-grabbing"
-            onPointerDown={onPointerDown}
+            className="huekit-bubble-btn cursor-grab touch-none active:cursor-grabbing"
+            onPointerDown={onBubblePointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            whileTap={reduce ? undefined : { scale: 0.9 }}
+            transition={{ type: "spring", visualDuration: 0.15, bounce: 0.3 }}
             onClick={() => {
-              if (!drag.current.moved) setOpen(true);
+              if (!drag.current.moved) {
+                const bubbleCenterX = pos.x + BUBBLE_SIZE / 2;
+                setPanelOrigin(bubbleCenterX < window.innerWidth / 2 ? "left" : "right");
+                setOpen(true);
+              }
             }}
           >
-            <HueKitIcon size={56} />
-          </button>
+            <HueKitIcon size={BUBBLE_SIZE} />
+          </motion.button>
         )}
 
         <AnimatePresence>
           {open && (
             <motion.div
+              ref={panelRef}
               role="dialog"
               aria-label="HueKit"
-              className="w-[300px] rounded-[20px] border border-line bg-panel shadow-[0_24px_64px_rgba(0,0,0,0.6)]"
+              className="huekit-panel"
+              data-expanded={expanded}
               initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
               animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1 }}
               exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97, transition: PANEL_EXIT }}
               transition={SPRING.panel}
-              style={{ transformOrigin: "top left" }}
+              style={{
+                width: panelWidth,
+                transformOrigin: panelOrigin === "left" ? "top left" : "top right",
+                ...(panelOrigin === "right" ? { marginLeft: -rightOffset } : {}),
+              }}
             >
-              <header className="flex items-center justify-between border-b border-line px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <HueKitIcon size={28} />
-                  <span className="text-sm font-semibold text-ink">HueKit</span>
+              <header
+                className="huekit-panel-header huekit-panel-drag-handle"
+                onPointerDown={onHeaderPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+              >
+                <div className="huekit-panel-title-row">
+                  <div className="huekit-panel-title">
+                    <HueKitIcon size={24} />
+                    <span>HueKit</span>
+                  </div>
+                  <ToolbarTip label="Close">
+                    <button
+                      type="button"
+                      aria-label="Close HueKit"
+                      className="huekit-toolbar-btn"
+                      onClick={() => setOpen(false)}
+                    >
+                      <IconClose />
+                    </button>
+                  </ToolbarTip>
                 </div>
-                <button
-                  type="button"
-                  aria-label="Close HueKit"
-                  className="grid h-7 w-7 place-items-center rounded-lg text-dim hover:bg-white/6 hover:text-ink"
-                  onClick={() => setOpen(false)}
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M1 1l8 8M9 1L1 9" />
-                  </svg>
-                </button>
+                <div className="huekit-toolbar">
+                  <ToolbarTip label="Eyedropper">
+                    <button
+                      type="button"
+                      aria-label="Pick color from screen"
+                      className="huekit-toolbar-btn"
+                      disabled={!selected || !hasEyedropper}
+                      onClick={eyedropper}
+                    >
+                      <IconEyedropper />
+                    </button>
+                  </ToolbarTip>
+                  <ToolbarTip label="Reset all">
+                    <button
+                      type="button"
+                      aria-label="Reset all variables"
+                      className="huekit-toolbar-btn"
+                      onClick={resetAll}
+                    >
+                      <IconReset />
+                    </button>
+                  </ToolbarTip>
+                  <ToolbarTip label={copied ? "Copied!" : "Copy CSS"}>
+                    <button
+                      type="button"
+                      aria-label="Copy CSS block"
+                      className="huekit-toolbar-btn"
+                      onClick={handleCopy}
+                    >
+                      <IconCopySwap copied={copied} />
+                    </button>
+                  </ToolbarTip>
+                </div>
               </header>
 
-              <div className="max-h-[70vh] overflow-y-auto p-3">
-                <PalettePanel
-                  vars={vars}
-                  selected={selected}
-                  onSelect={setSelected}
-                  onReset={resetVar}
-                  onResetAll={resetAll}
-                  onSave={savePalette}
-                  onLoad={loadPalette}
-                  palettes={palettes}
-                  onExport={exportCss}
-                  onEyedropper={eyedropper}
-                />
-                {selectedVar && (
-                  <WheelPicker
-                    varName={selectedVar.name}
-                    hsl={selectedVar.hsl}
-                    onChange={setSelectedHsl}
-                  />
-                )}
+              <div className="huekit-scroll">
+                <div className="huekit-content-row">
+                  <div className="huekit-content-left">
+                    <PalettePanel
+                      vars={vars}
+                      selected={selected}
+                      onSelect={setSelected}
+                      onReset={resetVar}
+                      onSave={savePalette}
+                      onLoad={loadPalette}
+                      palettes={palettes}
+                    />
+                  </div>
+                  <AnimatePresence>
+                    {selectedVar && (
+                      <motion.div
+                        key="wheel-col"
+                        className="huekit-content-right"
+                        style={{ width: WHEEL_COL, flexBasis: WHEEL_COL }}
+                        initial={reduce ? { opacity: 0 } : { opacity: 0, x: 12 }}
+                        animate={reduce ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                        exit={reduce ? { opacity: 0 } : { opacity: 0, x: 12 }}
+                        transition={{ duration: reduce ? 0 : 0.18, ease: "easeOut" }}
+                      >
+                        <WheelPicker
+                          hsl={selectedVar.hsl}
+                          onChange={setSelectedHsl}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           )}
