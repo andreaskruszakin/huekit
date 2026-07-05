@@ -1,5 +1,9 @@
 # Changelog
 
+## 22:55 [05-07-2026]
+
+- Pivoted to **HueKit** (DialKit for colors): `components/huekit/` module with `HueKitRoot` (draggable neomorphic bubble + panel), `useColorVars` (CSS variable scan/apply/reset, localStorage palettes, copy export), `WheelPicker` (hue ring + shade arc + HSL sliders + 10-step scale), `PalettePanel`, `lib/huekit-color.ts`. Neomorphic app icon in `HueKitIcon.tsx` + `public/huekit-icon.svg` + `public/icon-preview.html`. Demo page and `:root` vars (`--hue-accent`, `--hue-surface`, etc.) in `app/globals.css`/`app/page.tsx`; `HueKitRoot` mounted in `app/layout.tsx`. Solves live shade experimentation on any CSS-variable-driven site without per-component wiring.
+
 ## 20:22 [05-07-2026]
 
 - Removed the white hover outline from the inner shade dots in `components/ColorWheelPopover.tsx` — they keep the spring scale-up on hover, the ring stays on the outer hue dots only. The shades already read as one family; outlining them was noise.
