@@ -2,7 +2,7 @@
 
 DialKit for colors. A floating dev overlay that scans CSS variables on your page, lets you tune hues live, save palettes, and copy a `:root` block back into your stylesheet.
 
-**Live demo:** https://huekit.vercel.app
+**Live demo:** https://huekits.vercel.app
 
 ## Quick start
 

@@ -2,7 +2,7 @@
 
 ## 00:05 [06-07-2026]
 
-- Open source release prep: wheel column left padding (18px) and overflow fixes so HSL labels, scale swatches, and toolbar tooltips no longer clip on hover (`huekit-panel.css`, `ToolbarTip.tsx`); scale hover uses inset transform instead of outline-offset. Added `README.md`, `CONTRIBUTING.md`, `LICENSE` (MIT), contributing section on landing, GitHub links, package rename to `huekit`. Repo renamed to `huekit`, deployed to https://huekit.vercel.app.
+- Open source release prep: wheel column left padding (18px) and overflow fixes so HSL labels, scale swatches, and toolbar tooltips no longer clip on hover (`huekit-panel.css`, `ToolbarTip.tsx`); scale hover uses inset transform instead of outline-offset. Added `README.md`, `CONTRIBUTING.md`, `LICENSE` (MIT), contributing section on landing, GitHub links, package rename to `huekit`. Repo renamed to `huekit` (public), deployed to https://huekits.vercel.app (`huekit.vercel.app` globally taken on Vercel).
 
 ## 23:55 [05-07-2026]
 

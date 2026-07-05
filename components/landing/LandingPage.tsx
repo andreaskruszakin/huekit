@@ -179,7 +179,7 @@ export function LandingPage() {
       <footer className="landing-footer">
         <p>
           HueKit ·{" "}
-          <a href="https://huekit.vercel.app" className="landing-link">huekit.vercel.app</a>
+          <a href="https://huekits.vercel.app" className="landing-link">huekits.vercel.app</a>
           {" · "}
           <a href="https://github.com/andreaskruszakin/huekit" className="landing-link">GitHub</a>
         </p>
