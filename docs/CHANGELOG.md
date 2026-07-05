@@ -1,6 +1,8 @@
 # Changelog
 
-## 20:15 [05-07-2026]
+## 20:20 [05-07-2026]
+
+- Fixed hue switching: the shade-arc container (`absolute inset-0` in `components/ColorWheelPopover.tsx`) was invisibly covering the whole wheel and swallowing clicks on other hue dots — now `pointer-events-none` with `pointer-events-auto` on the shade buttons, so you can hop between hues freely. Added a `HoverRing` component: white outline (same treatment as the selected state) on hover and keyboard focus for both hue and shade dots, opacity-only transition. Solves "can't switch colors after picking one" and makes hover targets explicit.
 
 - Smoother popover in/out per Emil's origin-aware guidance: `transformOrigin` now aims at the wheel trigger's measured center (`PANEL_ORIGIN` in `lib/picker-preset.ts`, browser-measured 126px/-38px) so the panel grows out of the trigger instead of its own corner; entrance switched to a duration+bounce spring (`SPRING.panel` 0.4s bounce 0), dropped the `y` slide (scale + origin carries the direction), exit is a faster 150ms quint ease-out (`PANEL_EXIT`) for asymmetric enter/exit. `components/ColorWheelPopover.tsx` updated. Solves the entrance feeling like a detached corner-slide.
 

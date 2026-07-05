@@ -9,6 +9,17 @@ import {
 
 const rad = (deg: number) => ((deg - 90) * Math.PI) / 180;
 
+// white outline shown on hover and while selected; opacity-only transition
+function HoverRing({ visible = false }: { visible?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 rounded-full transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 ${visible ? "opacity-100" : "opacity-0"}`}
+      style={{ boxShadow: "0 0 0 2px #161618, 0 0 0 3.5px rgba(255,255,255,0.9)" }}
+    />
+  );
+}
+
 function dotPosition(radius: number, deg: number, size: number) {
   const c = WHEEL.size / 2;
   return {
@@ -80,31 +91,31 @@ export function ColorWheelPopover({
                 key={h}
                 data-hue-dot
                 aria-label={HUE_NAMES[h]}
-                className="absolute rounded-full"
+                className="group absolute rounded-full"
                 style={{
                   ...dotPosition(WHEEL.hueRadius, h, WHEEL.hueDot),
                   background: sphereFill(h, 82, 56),
-                  boxShadow: activeHue === h
-                    ? "0 0 0 2px #161618, 0 0 0 3.5px rgba(255,255,255,0.9)"
-                    : "inset 0 0 0 1px rgba(255,255,255,0.06)",
+                  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
                 }}
                 whileHover={reduce ? undefined : { scale: 1.16 }}
                 whileTap={reduce ? undefined : { scale: 0.94 }}
                 transition={SPRING.hover}
                 onClick={() => setActiveHue(h)}
-              />
+              >
+                <HoverRing visible={activeHue === h} />
+              </motion.button>
             ))}
 
             <AnimatePresence mode="wait">
               {activeHue !== null && (
-                <motion.div key={activeHue} className="absolute inset-0">
+                <motion.div key={activeHue} className="pointer-events-none absolute inset-0">
                   {SHADE_LIGHTNESS.map((l, i) => {
                     const deg = activeHue + (i - 2) * WHEEL.shadeSpreadDeg;
                     return (
                       <motion.button
                         key={l}
                         aria-label={`${HUE_NAMES[activeHue]} shade ${i + 1}`}
-                        className="absolute rounded-full"
+                        className="group pointer-events-auto absolute rounded-full"
                         style={{
                           ...dotPosition(WHEEL.shadeRadius, deg, WHEEL.shadeDot),
                           background: sphereFill(activeHue, 72, l),
@@ -119,7 +130,9 @@ export function ColorWheelPopover({
                         onClick={() =>
                           onPick({ h: activeHue, s: 72, l, css: `hsl(${activeHue} 72% ${l}%)`, name: HUE_NAMES[activeHue] })
                         }
-                      />
+                      >
+                        <HoverRing />
+                      </motion.button>
                     );
                   })}
                 </motion.div>
