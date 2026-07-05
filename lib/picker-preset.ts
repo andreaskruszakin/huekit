@@ -26,6 +26,9 @@ export const SPRING = {
 
 export const SHADE_STAGGER_S = 0.022;
 
+// grace period before the popover closes after the pointer leaves it
+export const HOVER_CLOSE_DELAY_MS = 320;
+
 export const hsl = (h: number, s = 82, l = 56) => `hsl(${h} ${s}% ${l}%)`;
 
 // lit-sphere fill so dots read as material, not flat vectors

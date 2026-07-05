@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ColorWheelPopover } from "@/components/ColorWheelPopover";
-import { HUES, SPRING, hsl, type PickedColor } from "@/lib/picker-preset";
+import { HOVER_CLOSE_DELAY_MS, HUES, SPRING, hsl, type PickedColor } from "@/lib/picker-preset";
 
 function SearchGlyph() {
   return (
@@ -43,7 +43,21 @@ export function SearchBar({ onColorChange }: { onColorChange: (color: PickedColo
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState<PickedColor | null>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reduce = useReducedMotion();
+
+  function cancelClose() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+  function scheduleClose() {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), HOVER_CLOSE_DELAY_MS);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +75,10 @@ export function SearchBar({ onColorChange }: { onColorChange: (color: PickedColo
     };
   }, [open]);
 
+  useEffect(() => cancelClose, []);
+
   function pick(next: PickedColor) {
+    cancelClose();
     setColor(next);
     onColorChange(next);
     setOpen(false);
@@ -117,7 +134,9 @@ export function SearchBar({ onColorChange }: { onColorChange: (color: PickedColo
           aria-haspopup="dialog"
           aria-expanded={open}
           className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors hover:bg-white/[0.08] ${open ? "bg-white/[0.08]" : ""}`}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => { cancelClose(); setOpen((v) => !v); }}
+          onPointerEnter={cancelClose}
+          onPointerLeave={() => { if (open) scheduleClose(); }}
         >
           <WheelGlyph />
         </button>
@@ -135,7 +154,7 @@ export function SearchBar({ onColorChange }: { onColorChange: (color: PickedColo
         </motion.button>
       </div>
 
-      <ColorWheelPopover open={open} onPick={pick} />
+      <ColorWheelPopover open={open} onPick={pick} onHoverIn={cancelClose} onHoverOut={scheduleClose} />
     </div>
   );
 }

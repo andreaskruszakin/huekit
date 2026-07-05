@@ -20,10 +20,12 @@ function dotPosition(radius: number, deg: number, size: number) {
 }
 
 export function ColorWheelPopover({
-  open, onPick,
+  open, onPick, onHoverIn, onHoverOut,
 }: {
   open: boolean;
   onPick: (color: PickedColor) => void;
+  onHoverIn: () => void;
+  onHoverOut: () => void;
 }) {
   const [activeHue, setActiveHue] = useState<number | null>(null);
   const reduce = useReducedMotion();
@@ -47,6 +49,8 @@ export function ColorWheelPopover({
           animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.12 } }}
           transition={SPRING.panel}
+          onPointerEnter={onHoverIn}
+          onPointerLeave={onHoverOut}
         >
           <div
             ref={wheelRef}
