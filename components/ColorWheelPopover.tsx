@@ -115,7 +115,7 @@ export function ColorWheelPopover({
                       <motion.button
                         key={l}
                         aria-label={`${HUE_NAMES[activeHue]} shade ${i + 1}`}
-                        className="group pointer-events-auto absolute rounded-full"
+                        className="pointer-events-auto absolute rounded-full"
                         style={{
                           ...dotPosition(WHEEL.shadeRadius, deg, WHEEL.shadeDot),
                           background: sphereFill(activeHue, 72, l),
@@ -130,9 +130,7 @@ export function ColorWheelPopover({
                         onClick={() =>
                           onPick({ h: activeHue, s: 72, l, css: `hsl(${activeHue} 72% ${l}%)`, name: HUE_NAMES[activeHue] })
                         }
-                      >
-                        <HoverRing />
-                      </motion.button>
+                      />
                     );
                   })}
                 </motion.div>

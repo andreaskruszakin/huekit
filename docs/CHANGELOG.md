@@ -1,6 +1,8 @@
 # Changelog
 
-## 20:20 [05-07-2026]
+## 20:22 [05-07-2026]
+
+- Removed the white hover outline from the inner shade dots in `components/ColorWheelPopover.tsx` — they keep the spring scale-up on hover, the ring stays on the outer hue dots only. The shades already read as one family; outlining them was noise.
 
 - Fixed hue switching: the shade-arc container (`absolute inset-0` in `components/ColorWheelPopover.tsx`) was invisibly covering the whole wheel and swallowing clicks on other hue dots — now `pointer-events-none` with `pointer-events-auto` on the shade buttons, so you can hop between hues freely. Added a `HoverRing` component: white outline (same treatment as the selected state) on hover and keyboard focus for both hue and shade dots, opacity-only transition. Solves "can't switch colors after picking one" and makes hover targets explicit.
 
