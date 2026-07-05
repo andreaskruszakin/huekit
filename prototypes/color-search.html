@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color search — 5 variations</title>
+<style>
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+    --tracking: -0.02em;
+    --s4: 4px;  --s8: 8px;  --s12: 12px; --s16: 16px;
+    --s24: 24px; --s32: 32px; --s40: 40px; --s48: 48px; --s64: 64px;
+    --r-input: 4px; --r-card: 8px; --r-pill: 100px;
+    --text: #101010; --text-2: #6B7280;
+    --bg: #FFFFFF; --surface: #F9FAFB; --border: #D1D5DB;
+    --fill: #101010; --fill-soft: #E5E7EB;
+    --ease: cubic-bezier(0.25, 1, 0.5, 1);
+    --dur: 180ms;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: var(--font); letter-spacing: var(--tracking);
+    color: var(--text); background: var(--surface); font-weight: 500;
+    min-height: 100vh;
+  }
+  button { font: inherit; letter-spacing: inherit; color: inherit; cursor: pointer; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  /* ── Header ─────────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--s16); padding: var(--s12) var(--s24);
+    background: var(--bg); border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 14px; font-weight: 600; }
+  [role="tablist"] { display: flex; gap: var(--s8); }
+  .pill {
+    display: flex; align-items: center; gap: var(--s8);
+    padding: 5px var(--s12) 5px 5px; border-radius: var(--r-pill);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-2); font-size: 12px;
+  }
+  .pill .num {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 11px;
+    background: var(--fill-soft); color: var(--text-2);
+  }
+  .pill[aria-selected="true"] { background: var(--fill); border-color: var(--fill); color: #fff; }
+  .pill[aria-selected="true"] .num { background: rgba(255,255,255,0.25); color: #fff; }
+
+  /* ── Panels ─────────────────────────────────────────── */
+  section[role="tabpanel"] { padding: var(--s48) var(--s24) var(--s64); }
+  section[hidden] { display: none; }
+  section.entering { animation: panel-in var(--dur) var(--ease); }
+  @keyframes panel-in { from { opacity: 0; } to { opacity: 1; } }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h2 { font-size: 24px; font-weight: 600; margin-bottom: var(--s12); }
+  .rationale { color: var(--text-2); font-size: 14px; line-height: 1.5; max-width: 60ch; margin-bottom: var(--s24); }
+
+  /* ── Stage: search bar + results skeleton ───────────── */
+  .stage {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-card);
+    padding: var(--s24); position: relative;
+  }
+  .bar-zone { position: relative; max-width: 640px; margin: 0 auto; }
+  .bar {
+    display: flex; align-items: center; gap: var(--s12);
+    padding: var(--s8) var(--s8) var(--s8) var(--s16);
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-pill);
+    min-height: 52px;
+  }
+  .bar .icon { color: var(--text-2); flex: none; display: grid; place-items: center; }
+  .bar .field { flex: 1; display: flex; align-items: center; gap: var(--s8); min-width: 0; }
+  .bar .placeholder { color: var(--text-2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trigger {
+    width: 36px; height: 36px; flex: none; border: 0; background: none;
+    border-radius: 50%; display: grid; place-items: center;
+  }
+  .trigger:hover, .trigger[aria-expanded="true"] { background: var(--fill-soft); }
+  .search-btn {
+    flex: none; border: 0; border-radius: var(--r-pill);
+    padding: var(--s8) var(--s16); font-size: 13px; font-weight: 600;
+    background: var(--surface); color: var(--text-2); cursor: default;
+  }
+  .search-btn.ready { background: var(--fill); color: #fff; cursor: pointer; }
+  .token {
+    display: flex; align-items: center; gap: 6px; flex: none;
+    padding: 3px 6px 3px 3px; border: 1px solid var(--border); border-radius: var(--r-pill);
+    background: var(--surface); font-size: 12px; color: var(--text-2);
+  }
+  .token .swatch { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+  .token .remove {
+    border: 0; background: none; padding: 0; width: 16px; height: 16px;
+    display: grid; place-items: center; border-radius: 50%; color: var(--text-2);
+    font-size: 12px; line-height: 1;
+  }
+  .token .remove:hover { background: var(--fill-soft); color: var(--text); }
+  .results { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s12); margin-top: var(--s24); }
+  .results .tile { background: var(--fill-soft); border-radius: var(--r-card); }
+
+  /* ── Popover shell ──────────────────────────────────── */
+  .popover {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 5;
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-card);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08); padding: var(--s16);
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .popover.open { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* ── Wheels (v1, v2, v3) ────────────────────────────── */
+  .wheel { position: relative; width: 240px; height: 240px; }
+  .dot {
+    position: absolute; border: 0; padding: 0; border-radius: 50%;
+    transition: transform var(--dur) var(--ease);
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .dot:hover { transform: scale(1.25); }
+  .dot.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+  .wheel .hint {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 12px; color: var(--text-2); pointer-events: none; text-align: center;
+  }
+  .shade-arc .dot { opacity: 0; transform: scale(0.4); pointer-events: none; }
+  .shade-arc.show .dot { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .shade-arc.show .dot:hover { transform: scale(1.25); }
+
+  /* v3 scrub */
+  .scrub { touch-action: none; cursor: grab; border-radius: 50%; }
+  .scrub.dragging { cursor: grabbing; }
+  .scrub .dot { pointer-events: none; transition: none; border: 0; }
+  .needle {
+    position: absolute; left: 50%; top: 50%; width: 74px; height: 2px;
+    background: var(--border); transform-origin: 0 50%; pointer-events: none;
+  }
+  .scrub .preview {
+    position: absolute; left: 50%; top: 50%; width: 44px; height: 44px;
+    margin: -22px 0 0 -22px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1); pointer-events: none;
+    background: var(--fill-soft);
+  }
+
+  /* ── Grid (v4) ──────────────────────────────────────── */
+  .swatch-head {
+    display: flex; align-items: center; gap: var(--s8);
+    margin-bottom: var(--s12); min-height: 24px;
+  }
+  .swatch-head .preview-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--fill-soft); border: 1px solid rgba(0,0,0,0.08); }
+  .swatch-head .name { font-size: 12px; color: var(--text-2); }
+  .swatches { display: grid; grid-template-columns: repeat(6, 28px); gap: var(--s8); }
+  .swatches .dot { position: static; width: 28px; height: 28px; }
+
+  /* ── Inline bloom (v5) ──────────────────────────────── */
+  .bloom { display: flex; align-items: center; gap: var(--s8); }
+  .bloom .dot {
+    position: static; width: 24px; height: 24px; flex: none;
+    opacity: 0; transform: scale(0.3); pointer-events: none;
+    transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+  .bloom.open .dot { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .bloom.open .dot:hover { transform: scale(1.2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    section.entering { animation: none; }
+    .popover, .dot, .bloom .dot, .shade-arc .dot { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Color search</h1>
+  <nav role="tablist" aria-label="Variations">
+    <button class="pill" role="tab" aria-selected="true" aria-controls="v1"><span class="num">1</span>Dot ring</button>
+    <button class="pill" role="tab" aria-selected="false" aria-controls="v2" tabindex="-1"><span class="num">2</span>Hue ring + shades</button>
+    <button class="pill" role="tab" aria-selected="false" aria-controls="v3" tabindex="-1"><span class="num">3</span>Orbital scrub</button>
+    <button class="pill" role="tab" aria-selected="false" aria-controls="v4" tabindex="-1"><span class="num">4</span>Dot grid</button>
+    <button class="pill" role="tab" aria-selected="false" aria-controls="v5" tabindex="-1"><span class="num">5</span>Inline bloom</button>
+  </nav>
+</header>
+
+<main>
+  <section id="v1" role="tabpanel">
+    <div class="wrap">
+      <h2>1 · Dot ring</h2>
+      <p class="rationale">The trigger icon blown up: a radial ring of 12 curated hue dots. Hover enlarges, one click selects and closes. The baseline — zero learning curve, fastest possible path from intent to token. Tradeoff: no shade control; 12 hues is all you get.</p>
+      <div class="stage" data-stage></div>
+    </div>
+  </section>
+
+  <section id="v2" role="tabpanel" hidden>
+    <div class="wrap">
+      <h2>2 · Hue ring + shades</h2>
+      <p class="rationale">Two-stage radial: the outer ring picks a hue, an inner arc blooms with five tints and shades of it. Trades one extra click for shade precision without ever showing a saturation square. Wins when "light red vs. dark red" actually matters to search results.</p>
+      <div class="stage" data-stage></div>
+    </div>
+  </section>
+
+  <section id="v3" role="tabpanel" hidden>
+    <div class="wrap">
+      <h2>3 · Orbital scrub</h2>
+      <p class="rationale">Continuous: drag around the wheel like a dial — a needle sweeps the hue circle, nearby dots magnify toward the pointer, the center previews the color live. Release to commit; arrow keys step the hue. Trades click precision for a tactile, continuous feel. Wins when browsing color is part of the pleasure.</p>
+      <div class="stage" data-stage></div>
+    </div>
+  </section>
+
+  <section id="v4" role="tabpanel" hidden>
+    <div class="wrap">
+      <h2>4 · Dot grid</h2>
+      <p class="rationale">No wheel: a flat curated palette grid — vivid hues, muted tones, neutrals — with a live preview row on top. Trades the radial motif for scannability and a palette that can grow without crowding a circle. Wins when the palette is editorial and finite, not a color space.</p>
+      <div class="stage" data-stage></div>
+    </div>
+  </section>
+
+  <section id="v5" role="tabpanel" hidden>
+    <div class="wrap">
+      <h2>5 · Inline bloom</h2>
+      <p class="rationale">No popover: clicking the trigger blooms the dots horizontally into the search bar itself; picking one collapses the row into a color token sitting in the input. Trades UI surface (no room for shades or labels) for never leaving the search context. Wins when color is a quick filter, not a decision.</p>
+      <div class="stage" data-stage></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const HUES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+  const hsl = (h, s = 70, l = 55) => `hsl(${h} ${s}% ${l}%)`;
+  const tileHeights = [88, 120, 96, 140];
+
+  const svgSearch = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>';
+  const svgLens = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="3"/><circle cx="8" cy="8" r="2.5"/></svg>';
+
+  function svgWheel() {
+    const dots = HUES.map(h => {
+      const a = (h - 90) * Math.PI / 180;
+      return `<circle cx="${9 + 6.5 * Math.cos(a)}" cy="${9 + 6.5 * Math.sin(a)}" r="1.7" fill="${hsl(h)}"/>`;
+    }).join("");
+    return `<svg width="18" height="18" viewBox="0 0 18 18">${dots}</svg>`;
+  }
+
+  // ── shared stage builder: bar + results skeleton ──────
+  // returns { barZone, field, placeholder, trigger, setColor, clearColor }
+  function buildStage(stage, { withTrigger = true } = {}) {
+    const zone = document.createElement("div");
+    zone.className = "bar-zone";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.innerHTML = `
+      <span class="icon">${svgSearch}</span>
+      <div class="field"><span class="placeholder">Try 'contemporary art'</span></div>
+      <span class="icon">${svgLens}</span>`;
+    const field = bar.querySelector(".field");
+    const placeholder = bar.querySelector(".placeholder");
+
+    let trigger = null;
+    if (withTrigger) {
+      trigger = document.createElement("button");
+      trigger.className = "trigger";
+      trigger.setAttribute("aria-label", "Color search");
+      trigger.setAttribute("aria-haspopup", "true");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.innerHTML = svgWheel();
+      bar.appendChild(trigger);
+    }
+
+    const searchBtn = document.createElement("button");
+    searchBtn.className = "search-btn";
+    searchBtn.textContent = "Search";
+    searchBtn.disabled = true;
+    bar.appendChild(searchBtn);
+
+    const results = document.createElement("div");
+    results.className = "results";
+    for (let i = 0; i < 8; i++) {
+      const t = document.createElement("div");
+      t.className = "tile";
+      t.style.height = tileHeights[i % tileHeights.length] + "px";
+      results.appendChild(t);
+    }
+
+    zone.appendChild(bar);
+    stage.appendChild(zone);
+    stage.appendChild(results);
+
+    let token = null;
+    function clearColor() {
+      if (token) { token.remove(); token = null; }
+      placeholder.style.display = "";
+      searchBtn.classList.remove("ready");
+      searchBtn.disabled = true;
+    }
+    function setColor(color, label) {
+      clearColor();
+      token = document.createElement("span");
+      token.className = "token";
+      token.innerHTML = `<span class="swatch" style="background:${color}"></span>${label}<button class="remove" aria-label="Remove color">×</button>`;
+      token.querySelector(".remove").addEventListener("click", clearColor);
+      field.prepend(token);
+      searchBtn.classList.add("ready");
+      searchBtn.disabled = false;
+    }
+    return { zone, field, placeholder, trigger, setColor, clearColor };
+  }
+
+  // ── popover plumbing: open/close, escape, outside ─────
+  function attachPopover(barApi) {
+    const pop = document.createElement("div");
+    pop.className = "popover";
+    barApi.zone.appendChild(pop);
+    const trigger = barApi.trigger;
+    function open() { pop.classList.add("open"); trigger.setAttribute("aria-expanded", "true"); }
+    function close() { pop.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); }
+    trigger.addEventListener("click", () => pop.classList.contains("open") ? close() : open());
+    document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    document.addEventListener("pointerdown", e => {
+      if (!pop.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) close();
+    });
+    return { pop, open, close };
+  }
+
+  function placeDot(dot, cx, cy, r, deg, size) {
+    const a = (deg - 90) * Math.PI / 180;
+    dot.style.width = dot.style.height = size + "px";
+    dot.style.left = cx + r * Math.cos(a) - size / 2 + "px";
+    dot.style.top = cy + r * Math.sin(a) - size / 2 + "px";
+  }
+
+  const hueName = h => ({0:"Red",30:"Orange",60:"Yellow",90:"Lime",120:"Green",150:"Mint",180:"Cyan",210:"Sky",240:"Blue",270:"Purple",300:"Magenta",330:"Pink"})[h] || "Color";
+
+  // ── v1 · Dot ring ─────────────────────────────────────
+  (() => {
+    const barApi = buildStage(document.querySelector("#v1 [data-stage]"));
+    const { pop, close } = attachPopover(barApi);
+    const wheel = document.createElement("div");
+    wheel.className = "wheel";
+    HUES.forEach(h => {
+      const d = document.createElement("button");
+      d.className = "dot";
+      d.style.background = hsl(h);
+      d.setAttribute("aria-label", hueName(h));
+      placeDot(d, 120, 120, 92, h, 30);
+      d.addEventListener("click", () => { barApi.setColor(hsl(h), hueName(h)); close(); });
+      wheel.appendChild(d);
+    });
+    pop.appendChild(wheel);
+  })();
+
+  // ── v2 · Hue ring + shades ────────────────────────────
+  (() => {
+    const barApi = buildStage(document.querySelector("#v2 [data-stage]"));
+    const { pop, close } = attachPopover(barApi);
+    const wheel = document.createElement("div");
+    wheel.className = "wheel";
+    const hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = "Pick a hue";
+    wheel.appendChild(hint);
+
+    const arc = document.createElement("div");
+    arc.className = "shade-arc";
+    wheel.appendChild(arc);
+
+    let activeHueDot = null;
+    HUES.forEach(h => {
+      const d = document.createElement("button");
+      d.className = "dot";
+      d.style.background = hsl(h);
+      d.setAttribute("aria-label", hueName(h));
+      placeDot(d, 120, 120, 96, h, 26);
+      d.addEventListener("click", () => {
+        if (activeHueDot) activeHueDot.classList.remove("active");
+        activeHueDot = d;
+        d.classList.add("active");
+        hint.textContent = "";
+        arc.innerHTML = "";
+        [78, 66, 55, 42, 30].forEach((l, i) => {
+          const s = document.createElement("button");
+          s.className = "dot";
+          s.style.background = hsl(h, 65, l);
+          s.setAttribute("aria-label", `${hueName(h)} shade ${i + 1}`);
+          placeDot(s, 120, 120, 46, h - 40 + i * 20, 24);
+          s.addEventListener("click", () => { barApi.setColor(hsl(h, 65, l), hueName(h)); close(); });
+          arc.appendChild(s);
+        });
+        arc.classList.remove("show");
+        requestAnimationFrame(() => requestAnimationFrame(() => arc.classList.add("show")));
+      });
+      wheel.appendChild(d);
+    });
+    pop.appendChild(wheel);
+  })();
+
+  // ── v3 · Orbital scrub ────────────────────────────────
+  (() => {
+    const barApi = buildStage(document.querySelector("#v3 [data-stage]"));
+    const { pop, close } = attachPopover(barApi);
+    const wheel = document.createElement("div");
+    wheel.className = "wheel scrub";
+    wheel.tabIndex = 0;
+    wheel.setAttribute("role", "slider");
+    wheel.setAttribute("aria-label", "Hue");
+    wheel.setAttribute("aria-valuemin", 0);
+    wheel.setAttribute("aria-valuemax", 359);
+
+    const needle = document.createElement("div");
+    needle.className = "needle";
+    wheel.appendChild(needle);
+    const preview = document.createElement("div");
+    preview.className = "preview";
+    wheel.appendChild(preview);
+
+    const dots = [];
+    for (let h = 0; h < 360; h += 10) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      d.style.background = hsl(h);
+      placeDot(d, 120, 120, 96, h, 12);
+      d.dataset.hue = h;
+      wheel.appendChild(d);
+      dots.push(d);
+    }
+
+    let hue = 0, engaged = false;
+    function render() {
+      needle.style.transform = `rotate(${hue - 90}deg)`;
+      preview.style.background = hsl(hue);
+      wheel.setAttribute("aria-valuenow", Math.round(hue));
+      dots.forEach(d => {
+        const dh = Math.abs(+d.dataset.hue - hue);
+        const dist = Math.min(dh, 360 - dh);
+        const s = 1 + 1.5 * Math.exp(-((dist / 22) ** 2));
+        d.style.transform = `scale(${s})`;
+      });
+    }
+    function angleFrom(e) {
+      const r = wheel.getBoundingClientRect();
+      const deg = Math.atan2(e.clientY - (r.top + 120), e.clientX - (r.left + 120)) * 180 / Math.PI;
+      return (deg + 450) % 360;
+    }
+    wheel.addEventListener("pointerdown", e => {
+      wheel.setPointerCapture(e.pointerId);
+      wheel.classList.add("dragging");
+      engaged = true;
+      hue = angleFrom(e);
+      render();
+    });
+    wheel.addEventListener("pointermove", e => { if (engaged) { hue = angleFrom(e); render(); } });
+    wheel.addEventListener("pointerup", () => {
+      engaged = false;
+      wheel.classList.remove("dragging");
+      const h = Math.round(hue / 10) * 10 % 360;
+      barApi.setColor(hsl(h), hueName(Math.round(h / 30) * 30 % 360));
+      close();
+    });
+    wheel.addEventListener("keydown", e => {
+      const step = { ArrowLeft: -10, ArrowDown: -10, ArrowRight: 10, ArrowUp: 10 }[e.key];
+      if (step !== undefined) {
+        e.preventDefault();
+        hue = (hue + step + 360) % 360;
+        render();
+      } else if (e.key === "Enter") {
+        barApi.setColor(hsl(hue), hueName(Math.round(hue / 30) * 30 % 360));
+        close();
+      }
+    });
+    render();
+    pop.appendChild(wheel);
+  })();
+
+  // ── v4 · Dot grid ─────────────────────────────────────
+  (() => {
+    const barApi = buildStage(document.querySelector("#v4 [data-stage]"));
+    const { pop, close } = attachPopover(barApi);
+
+    const head = document.createElement("div");
+    head.className = "swatch-head";
+    head.innerHTML = '<span class="preview-dot"></span><span class="name">Pick a color</span>';
+    const previewDot = head.querySelector(".preview-dot");
+    const name = head.querySelector(".name");
+    pop.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "swatches";
+    const palette = [
+      ...[0, 30, 60, 120, 210, 270].map(h => ({ c: hsl(h, 75, 55), n: hueName(h) })),
+      ...[15, 45, 90, 180, 240, 330].map(h => ({ c: hsl(h, 75, 55), n: hueName(Math.round(h / 30) * 30 % 360) })),
+      ...[0, 30, 120, 210, 270, 330].map(h => ({ c: hsl(h, 30, 60), n: "Muted " + hueName(h).toLowerCase() })),
+      { c: "hsl(0 0% 8%)", n: "Black" }, { c: "hsl(0 0% 35%)", n: "Charcoal" },
+      { c: "hsl(0 0% 60%)", n: "Gray" }, { c: "hsl(30 20% 80%)", n: "Sand" },
+      { c: "hsl(40 30% 92%)", n: "Cream" }, { c: "hsl(0 0% 100%)", n: "White" },
+    ];
+    palette.forEach(({ c, n }) => {
+      const d = document.createElement("button");
+      d.className = "dot";
+      d.style.background = c;
+      d.setAttribute("aria-label", n);
+      d.addEventListener("mouseenter", () => { previewDot.style.background = c; name.textContent = n; });
+      d.addEventListener("focus", () => { previewDot.style.background = c; name.textContent = n; });
+      d.addEventListener("click", () => { barApi.setColor(c, n); close(); });
+      grid.appendChild(d);
+    });
+    pop.appendChild(grid);
+  })();
+
+  // ── v5 · Inline bloom ─────────────────────────────────
+  (() => {
+    const barApi = buildStage(document.querySelector("#v5 [data-stage]"));
+    const trigger = barApi.trigger;
+    const bloom = document.createElement("div");
+    bloom.className = "bloom";
+    barApi.field.appendChild(bloom);
+
+    let open = false;
+    HUES.slice(0, 10).forEach((h, i) => {
+      const d = document.createElement("button");
+      d.className = "dot";
+      d.style.background = hsl(h);
+      d.style.transitionDelay = i * 12 + "ms";
+      d.setAttribute("aria-label", hueName(h));
+      d.addEventListener("click", () => { collapse(); barApi.setColor(hsl(h), hueName(h)); });
+      bloom.appendChild(d);
+    });
+    function expand() {
+      open = true;
+      barApi.placeholder.style.display = "none";
+      bloom.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+    }
+    function collapse() {
+      open = false;
+      bloom.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+      if (!barApi.field.querySelector(".token")) barApi.placeholder.style.display = "";
+    }
+    trigger.addEventListener("click", () => open ? collapse() : expand());
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && open) collapse(); });
+  })();
+
+  // ── tab switcher: screens, not scrolling ──────────────
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus = false) {
+    tabs.forEach((tab, j) => {
+      const active = j === i;
+      tab.setAttribute("aria-selected", active);
+      tab.tabIndex = active ? 0 : -1;
+      panels[j].hidden = !active;
+      panels[j].classList.toggle("entering", active);
+    });
+    if (focus) tabs[i].focus();
+  }
+  tabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => select(i));
+    tab.addEventListener("keydown", e => {
+      const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      if (!dir) return;
+      e.preventDefault();
+      select((i + dir + tabs.length) % tabs.length, true);
+    });
+  });
+})();
+</script>
+</body>
+</html>
