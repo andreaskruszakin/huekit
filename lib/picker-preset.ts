@@ -18,11 +18,19 @@ export const WHEEL = {
 };
 
 export const SPRING = {
-  panel: { type: "spring", stiffness: 480, damping: 38, mass: 0.9 } as const,
+  panel: { type: "spring", duration: 0.4, bounce: 0 } as const,
   dot: { type: "spring", stiffness: 520, damping: 32, mass: 0.7 } as const,
   hover: { type: "spring", stiffness: 420, damping: 28 } as const,
   token: { type: "spring", stiffness: 560, damping: 36 } as const,
 };
+
+// exits are faster than enters, strong ease-out (quint)
+export const PANEL_EXIT = { duration: 0.15, ease: [0.23, 1, 0.32, 1] } as const;
+
+// transform-origin aimed at the wheel trigger's center, measured in the
+// browser: 126px in from the panel's right edge, 38px above its top
+// (10px anchor gap + half of the 56px bar)
+export const PANEL_ORIGIN = "calc(100% - 126px) -38px";
 
 export const SHADE_STAGGER_S = 0.022;
 

@@ -1,6 +1,8 @@
 # Changelog
 
-## 20:10 [05-07-2026]
+## 20:15 [05-07-2026]
+
+- Smoother popover in/out per Emil's origin-aware guidance: `transformOrigin` now aims at the wheel trigger's measured center (`PANEL_ORIGIN` in `lib/picker-preset.ts`, browser-measured 126px/-38px) so the panel grows out of the trigger instead of its own corner; entrance switched to a duration+bounce spring (`SPRING.panel` 0.4s bounce 0), dropped the `y` slide (scale + origin carries the direction), exit is a faster 150ms quint ease-out (`PANEL_EXIT`) for asymmetric enter/exit. `components/ColorWheelPopover.tsx` updated. Solves the entrance feeling like a detached corner-slide.
 
 - Popover now dismisses itself when the pointer leaves it (marketplace-theme hover behavior): `scheduleClose`/`cancelClose` timer pair in `components/SearchBar.tsx` with `HOVER_CLOSE_DELAY_MS` (320ms grace) frozen in `lib/picker-preset.ts`, hover handlers threaded into `components/ColorWheelPopover.tsx` via `onHoverIn`/`onHoverOut`. Gated to `(hover: hover) and (pointer: fine)` so touch keeps tap-to-toggle; grace period covers the trigger-to-panel gap. Solves the popover lingering after the cursor moves on.
 

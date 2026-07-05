@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   HUES, HUE_NAMES, SHADE_LIGHTNESS, WHEEL, SPRING, SHADE_STAGGER_S,
-  sphereFill, type PickedColor,
+  PANEL_EXIT, PANEL_ORIGIN, sphereFill, type PickedColor,
 } from "@/lib/picker-preset";
 
 const rad = (deg: number) => ((deg - 90) * Math.PI) / 180;
@@ -44,10 +44,11 @@ export function ColorWheelPopover({
         <motion.div
           role="dialog"
           aria-label="Color search"
-          className="absolute right-0 top-[calc(100%+10px)] z-10 origin-top-right rounded-[20px] border border-line bg-panel p-5 shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
-          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: -6 }}
-          animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.12 } }}
+          className="absolute right-0 top-[calc(100%+10px)] z-10 rounded-[20px] border border-line bg-panel p-5 shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
+          style={{ transformOrigin: PANEL_ORIGIN }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97, transition: PANEL_EXIT }}
           transition={SPRING.panel}
           onPointerEnter={onHoverIn}
           onPointerLeave={onHoverOut}
