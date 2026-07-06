@@ -19,6 +19,7 @@ export type SavedPalette = {
 
 const PALETTE_KEY = "huekit-palettes";
 const BUBBLE_POS_KEY = "huekit-bubble-pos";
+const MAX_PALETTES = 20;
 
 function collectVarNames(): string[] {
   const names = new Set<string>();
@@ -57,10 +58,19 @@ function readVars(names: string[], originals: Record<string, string>): ColorVar[
   });
 }
 
+function currentVarSnapshot(vars: ColorVar[]): Record<string, string> {
+  return Object.fromEntries(vars.map((v) => [v.name, v.current]));
+}
+
+function persistPalettes(next: SavedPalette[]) {
+  localStorage.setItem(PALETTE_KEY, JSON.stringify(next));
+}
+
 export function useColorVars() {
   const [vars, setVars] = useState<ColorVar[]>([]);
   const [originals, setOriginals] = useState<Record<string, string>>({});
   const [palettes, setPalettes] = useState<SavedPalette[]>([]);
+  const [activePaletteId, setActivePaletteId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   const scan = useCallback(() => {
@@ -113,29 +123,69 @@ export function useColorVars() {
 
   const resetAll = useCallback(() => {
     for (const v of vars) document.documentElement.style.removeProperty(v.name);
+    setActivePaletteId(null);
     scan();
   }, [vars, scan]);
 
-  const savePalette = useCallback((name: string) => {
+  const savePaletteAs = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
     const entry: SavedPalette = {
       id: crypto.randomUUID(),
-      name,
-      vars: Object.fromEntries(vars.map((v) => [v.name, v.current])),
+      name: trimmed,
+      vars: currentVarSnapshot(vars),
       savedAt: new Date().toISOString(),
     };
     setPalettes((prev) => {
-      const next = [entry, ...prev].slice(0, 20);
-      localStorage.setItem(PALETTE_KEY, JSON.stringify(next));
+      const next = [entry, ...prev].slice(0, MAX_PALETTES);
+      persistPalettes(next);
       return next;
     });
+    setActivePaletteId(entry.id);
   }, [vars]);
 
-  const loadPalette = useCallback((palette: SavedPalette) => {
+  const loadPalette = useCallback((id: string) => {
+    const palette = palettes.find((p) => p.id === id);
+    if (!palette) return;
     for (const [name, css] of Object.entries(palette.vars)) {
       document.documentElement.style.setProperty(name, css);
     }
+    setActivePaletteId(id);
     scan();
-  }, [scan]);
+  }, [palettes, scan]);
+
+  const updateActivePalette = useCallback(() => {
+    if (!activePaletteId) return;
+    const snapshot = currentVarSnapshot(vars);
+    setPalettes((prev) => {
+      const next = prev.map((p) =>
+        p.id === activePaletteId
+          ? { ...p, vars: snapshot, savedAt: new Date().toISOString() }
+          : p
+      );
+      persistPalettes(next);
+      return next;
+    });
+  }, [activePaletteId, vars]);
+
+  const renamePalette = useCallback((id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setPalettes((prev) => {
+      const next = prev.map((p) => (p.id === id ? { ...p, name: trimmed } : p));
+      persistPalettes(next);
+      return next;
+    });
+  }, []);
+
+  const deletePalette = useCallback((id: string) => {
+    setPalettes((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      persistPalettes(next);
+      return next;
+    });
+    setActivePaletteId((prev) => (prev === id ? null : prev));
+  }, []);
 
   const exportCss = useCallback(() => {
     const lines = vars.map((v) => `  ${v.name}: ${v.current};`);
@@ -143,6 +193,7 @@ export function useColorVars() {
   }, [vars]);
 
   const selectedVar = vars.find((v) => v.name === selected) ?? null;
+  const activePalette = palettes.find((p) => p.id === activePaletteId) ?? null;
 
   const setSelectedHsl = useCallback((hsl: Hsl) => {
     if (!selected) return;
@@ -157,9 +208,14 @@ export function useColorVars() {
     applyVar,
     resetVar,
     resetAll,
-    savePalette,
+    savePaletteAs,
     loadPalette,
+    updateActivePalette,
+    renamePalette,
+    deletePalette,
     palettes,
+    activePaletteId,
+    activePalette,
     exportCss,
     setSelectedHsl,
     scan,

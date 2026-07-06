@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   HUES, HUE_NAMES, SHADE_LIGHTNESS, WHEEL, SPRING, SHADE_STAGGER_S, sphereFill,
-} from "@/lib/picker-preset";
+} from "@/lib/huekit-preset";
 import { formatColor, hslToHex, parseColor, shadeScale, type Hsl } from "@/lib/huekit-color";
 
 const FORMAT_KEY = "huekit-color-format";

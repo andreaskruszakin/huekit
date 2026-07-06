@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { HUES, hsl } from "@/lib/picker-preset";
+import { HUES, hsl } from "@/lib/huekit-preset";
 
 /** Neomorphic app-icon style bubble: dark squircle + recessed ring + hue dots */
 export function HueKitIcon({ size = 56 }: { size?: number }) {

@@ -24,6 +24,12 @@ export const ICON_PLUS = "M12 5v14M5 12h14";
 
 export const ICON_CLOSE = "M6 6l12 12M18 6L6 18";
 
+export const ICON_PENCIL =
+  "M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z";
+
+export const ICON_TRASH =
+  "M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6";
+
 function IconSvg({
   children,
   viewBox = "0 0 24 24",
@@ -78,6 +84,32 @@ export function IconClose() {
   return (
     <IconSvg>
       <path d={ICON_CLOSE} />
+    </IconSvg>
+  );
+}
+
+export function IconPencil() {
+  return (
+    <IconSvg>
+      <path d={ICON_PENCIL} />
+    </IconSvg>
+  );
+}
+
+export function IconTrash() {
+  return (
+    <IconSvg>
+      <path d={ICON_TRASH} />
+    </IconSvg>
+  );
+}
+
+export function IconPalette() {
+  return (
+    <IconSvg strokeWidth={1.75}>
+      <rect x="4" y="8" width="4" height="4" rx="1" />
+      <rect x="10" y="6" width="4" height="4" rx="1" />
+      <rect x="16" y="10" width="4" height="4" rx="1" />
     </IconSvg>
   );
 }

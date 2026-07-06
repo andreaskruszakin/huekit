@@ -1,5 +1,13 @@
 # Changelog
 
+## 09:20 [06-07-2026]
+
+- Toolbar palette control: `PaletteMenu` moved into icon toolbar as compact palette button with amber active dot, dropdown anchored to button (`PaletteMenu.tsx`, `huekit-panel.css`, `IconPalette`). OG color-search prototype split to [color-search-prototype](https://github.com/andreaskruszakin/color-search-prototype); removed `SearchBar`, `ColorWheelPopover`, `prototypes/`; slimmed wheel constants to `lib/huekit-preset.ts`.
+
+## 09:10 [06-07-2026]
+
+- Palette manager UX: header dropdown (`PaletteMenu.tsx`) with load, rename, delete, update active, and save-as; CRUD hooks in `useColorVars.ts` (`activePaletteId`, `savePaletteAs`, `renamePalette`, `deletePalette`, `updateActivePalette`); removed save/list UI from `PalettePanel.tsx`; pencil/trash icons + dropdown CSS in `huekit-panel.css`. Solves inability to edit or remove saved palettes and declutters the var list column.
+
 ## 00:05 [06-07-2026]
 
 - Open source release prep: wheel column left padding (18px) and overflow fixes so HSL labels, scale swatches, and toolbar tooltips no longer clip on hover (`huekit-panel.css`, `ToolbarTip.tsx`); scale hover uses inset transform instead of outline-offset. Added `README.md`, `CONTRIBUTING.md`, `LICENSE` (MIT), contributing section on landing, GitHub links, package rename to `huekit`. Repo renamed to `huekit` (public), deployed to https://huekits.vercel.app (`huekit.vercel.app` globally taken on Vercel).

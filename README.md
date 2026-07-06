@@ -65,6 +65,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 - [docs/HUEKIT.md](docs/HUEKIT.md) — architecture and edge cases
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — release notes
 
+**OG search-bar color picker prototype:** [color-search-prototype](https://github.com/andreaskruszakin/color-search-prototype) (archived, port 3321)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

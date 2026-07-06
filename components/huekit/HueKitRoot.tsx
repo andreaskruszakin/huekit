@@ -6,12 +6,13 @@ import { HueKitIcon } from "@/components/huekit/HueKitIcon";
 import {
   IconClose, IconCopySwap, IconEyedropper, IconReset,
 } from "@/components/huekit/icons";
+import { PaletteMenu } from "@/components/huekit/PaletteMenu";
 import { PalettePanel } from "@/components/huekit/PalettePanel";
 import { ToolbarTip } from "@/components/huekit/ToolbarTip";
 import { WheelPicker } from "@/components/huekit/WheelPicker";
 import { loadBubblePos, saveBubblePos, useColorVars } from "@/components/huekit/useColorVars";
 import { parseColor } from "@/lib/huekit-color";
-import { PANEL_EXIT, SPRING } from "@/lib/picker-preset";
+import { PANEL_EXIT, SPRING } from "@/lib/huekit-preset";
 import "./huekit-panel.css";
 
 declare global {
@@ -51,7 +52,8 @@ export function HueKitRoot() {
 
   const {
     vars, selected, setSelected, selectedVar, resetVar, resetAll,
-    savePalette, loadPalette, palettes, exportCss, setSelectedHsl,
+    savePaletteAs, loadPalette, updateActivePalette, renamePalette, deletePalette,
+    palettes, activePaletteId, activePalette, exportCss, setSelectedHsl,
   } = useColorVars();
 
   const [panelOrigin, setPanelOrigin] = useState<"left" | "right">("left");
@@ -99,7 +101,8 @@ export function HueKitRoot() {
   }, [open, pos]);
 
   const onHeaderPointerDown = useCallback((e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest("button")) return;
+    const t = e.target as HTMLElement;
+    if (t.closest("button, input, .huekit-palette-menu")) return;
     drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false, fromHeader: true };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [pos]);
@@ -228,6 +231,16 @@ export function HueKitRoot() {
                   </ToolbarTip>
                 </div>
                 <div className="huekit-toolbar">
+                  <PaletteMenu
+                    palettes={palettes}
+                    activePaletteId={activePaletteId}
+                    activePalette={activePalette}
+                    onLoad={loadPalette}
+                    onSaveAs={savePaletteAs}
+                    onUpdate={updateActivePalette}
+                    onRename={renamePalette}
+                    onDelete={deletePalette}
+                  />
                   <ToolbarTip label="Eyedropper">
                     <button
                       type="button"
@@ -270,9 +283,6 @@ export function HueKitRoot() {
                       selected={selected}
                       onSelect={setSelected}
                       onReset={resetVar}
-                      onSave={savePalette}
-                      onLoad={loadPalette}
-                      palettes={palettes}
                     />
                   </div>
                   <AnimatePresence>

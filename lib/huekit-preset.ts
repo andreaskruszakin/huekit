@@ -5,7 +5,6 @@ export const HUE_NAMES: Record<number, string> = {
   180: "Cyan", 210: "Sky", 240: "Blue", 270: "Purple", 300: "Magenta", 330: "Pink",
 };
 
-// lightness steps for the inner shade arc, light -> dark
 export const SHADE_LIGHTNESS = [76, 65, 55, 44, 32];
 
 export const WHEEL = {
@@ -14,33 +13,20 @@ export const WHEEL = {
   hueDot: 34,
   shadeRadius: 58,
   shadeDot: 28,
-  shadeSpreadDeg: 22, // angular step between shade dots, centered on the hue
+  shadeSpreadDeg: 22,
 };
 
 export const SPRING = {
   panel: { type: "spring", duration: 0.4, bounce: 0 } as const,
   dot: { type: "spring", stiffness: 520, damping: 32, mass: 0.7 } as const,
   hover: { type: "spring", stiffness: 420, damping: 28 } as const,
-  token: { type: "spring", stiffness: 560, damping: 36 } as const,
 };
 
-// exits are faster than enters, strong ease-out (quint)
 export const PANEL_EXIT = { duration: 0.15, ease: [0.23, 1, 0.32, 1] } as const;
-
-// transform-origin aimed at the wheel trigger's center, measured in the
-// browser: 126px in from the panel's right edge, 38px above its top
-// (10px anchor gap + half of the 56px bar)
-export const PANEL_ORIGIN = "calc(100% - 126px) -38px";
 
 export const SHADE_STAGGER_S = 0.022;
 
-// grace period before the popover closes after the pointer leaves it
-export const HOVER_CLOSE_DELAY_MS = 320;
-
 export const hsl = (h: number, s = 82, l = 56) => `hsl(${h} ${s}% ${l}%)`;
 
-// lit-sphere fill so dots read as material, not flat vectors
 export const sphereFill = (h: number, s: number, l: number) =>
   `radial-gradient(circle at 35% 30%, hsl(${h} ${Math.max(s - 14, 30)}% ${Math.min(l + 16, 92)}%), hsl(${h} ${s}% ${l}%) 58%, hsl(${h} ${s}% ${Math.max(l - 12, 12)}%))`;
-
-export type PickedColor = { h: number; s: number; l: number; css: string; name: string };

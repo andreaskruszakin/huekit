@@ -51,7 +51,18 @@ Saved to `localStorage` key `huekit-palettes`:
 { "id": "uuid", "name": "...", "vars": { "--hue-accent": "hsl(...)" }, "savedAt": "ISO" }
 ```
 
-Max 20 entries (newest first). Load applies all vars via `setProperty` then re-scans.
+Max 20 entries (newest first).
+
+**Header dropdown** (`PaletteMenu.tsx`):
+- **Load** — click a palette row to apply vars and set it active
+- **Rename** — pencil icon, inline edit, Enter to save
+- **Delete** — trash icon, immediate removal
+- **Update** — overwrite the active palette with current var values
+- **Save as…** — create a new palette and set it active
+
+`activePaletteId` tracks the loaded palette; cleared on reset all or delete of active entry.
+
+Hook API: `savePaletteAs`, `loadPalette(id)`, `updateActivePalette`, `renamePalette`, `deletePalette`, `activePalette`.
 
 ## Panel position
 
@@ -83,6 +94,8 @@ Drag clamping uses **visual panel bounds** (accounts for right-origin negative m
 | `HueKitRoot.tsx` | Bubble, panel shell, drag, toolbar |
 | `useColorVars.ts` | Scan, apply, reset, palettes, export |
 | `WheelPicker.tsx` | Hue ring, shade arc, sliders, hex, scale |
-| `PalettePanel.tsx` | Var list, save/load palettes |
+| `PalettePanel.tsx` | Var list, per-var reset |
+| `PaletteMenu.tsx` | Header palette dropdown (load, rename, delete, update, save as) |
 | `huekit-color.ts` | Parse, hslCss, hslToHex, shadeScale |
+| `huekit-preset.ts` | Wheel geometry and spring tokens |
 | `huekit-panel.css` | Glass panel tokens and layout |
