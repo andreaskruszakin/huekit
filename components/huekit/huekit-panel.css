@@ -1,5 +1,14 @@
 .huekit-root {
+  --hk-row-height: 36px;
+  --hk-radius: 8px;
+  --hk-accent-dot: rgb(252 211 77 / 0.9);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.huekit-root[data-theme="dark"] {
   --hk-glass-bg: #212121;
+  --hk-menu-bg: #1a1a1c;
   --hk-border: rgba(255, 255, 255, 0.1);
   --hk-surface: rgba(255, 255, 255, 0.05);
   --hk-surface-hover: rgba(255, 255, 255, 0.1);
@@ -8,11 +17,33 @@
   --hk-text-tertiary: rgba(255, 255, 255, 0.4);
   --hk-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --hk-shadow-collapsed: 0 4px 16px rgba(0, 0, 0, 0.25);
-  --hk-row-height: 36px;
-  --hk-radius: 8px;
+  --hk-track: rgba(255, 255, 255, 0.1);
+  --hk-thumb: #ffffff;
+  --hk-swatch-border: rgba(255, 255, 255, 0.1);
+  --hk-tooltip-bg: rgba(0, 0, 0, 0.88);
+  --hk-tooltip-text: rgba(255, 255, 255, 0.92);
+  --hk-tooltip-border: rgba(255, 255, 255, 0.08);
+  --hk-focus-border: rgba(255, 255, 255, 0.2);
+}
 
-  font-family: "Aeonik Pro", -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
+.huekit-root[data-theme="light"] {
+  --hk-glass-bg: rgba(255, 255, 255, 0.94);
+  --hk-menu-bg: #ffffff;
+  --hk-border: rgba(0, 0, 0, 0.1);
+  --hk-surface: rgba(0, 0, 0, 0.04);
+  --hk-surface-hover: rgba(0, 0, 0, 0.08);
+  --hk-text-root: #111111;
+  --hk-text-label: rgba(0, 0, 0, 0.65);
+  --hk-text-tertiary: rgba(0, 0, 0, 0.4);
+  --hk-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --hk-shadow-collapsed: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --hk-track: rgba(0, 0, 0, 0.1);
+  --hk-thumb: #111111;
+  --hk-swatch-border: rgba(0, 0, 0, 0.12);
+  --hk-tooltip-bg: rgba(17, 17, 17, 0.92);
+  --hk-tooltip-text: rgba(255, 255, 255, 0.95);
+  --hk-tooltip-border: rgba(255, 255, 255, 0.1);
+  --hk-focus-border: rgba(0, 0, 0, 0.2);
 }
 
 .huekit-bubble-btn {
@@ -180,23 +211,33 @@
   display: inline-flex;
 }
 
-.huekit-toolbar-tip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  top: auto;
-  left: 50%;
-  z-index: 20;
-  transform: translateX(-50%);
+.huekit-toolbar-tip-portal {
   white-space: nowrap;
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 10px;
+  padding: 5px 9px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.2;
-  color: rgba(255, 255, 255, 0.92);
-  background: rgba(0, 0, 0, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.08);
   pointer-events: none;
+}
+
+.huekit-toolbar-tip-portal[data-theme="dark"],
+.huekit-toolbar-tip-portal[data-theme="light"] {
+  color: var(--hk-tooltip-text);
+  background: var(--hk-tooltip-bg);
+  border: 1px solid var(--hk-tooltip-border);
+}
+
+.huekit-toolbar-tip-portal[data-theme="dark"] {
+  --hk-tooltip-bg: rgba(0, 0, 0, 0.88);
+  --hk-tooltip-text: rgba(255, 255, 255, 0.92);
+  --hk-tooltip-border: rgba(255, 255, 255, 0.08);
+}
+
+.huekit-toolbar-tip-portal[data-theme="light"] {
+  --hk-tooltip-bg: rgba(17, 17, 17, 0.92);
+  --hk-tooltip-text: rgba(255, 255, 255, 0.95);
+  --hk-tooltip-border: rgba(255, 255, 255, 0.1);
 }
 
 .huekit-section-label {
@@ -241,7 +282,7 @@
   height: 14px;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hk-swatch-border);
 }
 
 .huekit-dirty-dot {
@@ -249,7 +290,7 @@
   height: 5px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: rgb(252 211 77 / 0.85);
+  background: var(--hk-accent-dot);
 }
 
 .huekit-input {
@@ -350,7 +391,7 @@
   height: 4px;
   appearance: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hk-track);
   cursor: pointer;
 }
 
@@ -359,7 +400,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--hk-thumb);
   border: none;
 }
 
@@ -367,7 +408,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--hk-thumb);
   border: none;
 }
 
@@ -387,14 +428,14 @@
 .huekit-scale-swatch {
   aspect-ratio: 1;
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hk-swatch-border);
   cursor: pointer;
   padding: 0;
   transition: transform 0.12s ease-out;
 }
 
 .huekit-scale-swatch:hover {
-  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline: 1px solid var(--hk-focus-border);
   outline-offset: 0;
   transform: scale(1.04);
 }
@@ -473,12 +514,19 @@
 
 .huekit-format-controls {
   position: relative;
-  min-height: 74px;
+  height: calc(var(--hk-row-height) * 3 + 8px);
   margin-top: 4px;
 }
 
 .huekit-format-panel {
+  position: absolute;
+  inset: 0;
   width: 100%;
+}
+
+.huekit-format-panel-hex {
+  display: flex;
+  align-items: center;
 }
 
 .huekit-hex-input-row {
@@ -499,7 +547,7 @@
 
 .huekit-hex-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--hk-focus-border);
 }
 
 .sr-only {
@@ -521,7 +569,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .huekit-toolbar-tip {
+  .huekit-toolbar-tip-portal {
     transition: none;
   }
 }
@@ -589,7 +637,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgb(252 211 77 / 0.9);
+  background: var(--hk-accent-dot);
 }
 
 .huekit-palette-menu {
@@ -601,7 +649,7 @@
   z-index: 30;
   border-radius: 10px;
   border: 1px solid var(--hk-border);
-  background: #1a1a1c;
+  background: var(--hk-menu-bg);
   box-shadow: var(--hk-shadow);
   overflow: hidden;
 }

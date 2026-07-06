@@ -1,5 +1,21 @@
 # Changelog
 
+## 10:40 [06-07-2026]
+
+- Split repos: `huekit` is install-only product (`components/huekit/`, `lib/`, minimal demo in `app/page.tsx`); docs/marketing site moved to [huekit-landing](https://github.com/andreaskruszakin/huekit-landing) at https://huekits.vercel.app. Removed `components/landing/`, landing CSS from `app/globals.css`; README links to docs site. Ships UX polish (tooltips, Inter, light/dark, HSL/hex height) as installable module.
+
+## 10:22 [06-07-2026]
+
+- Completed site-replicator DialKit scrape (`node scrape.mjs` + `analyze.mjs` → `Andreas Studio/site-replicator/output/dialkit-ref/`, `design-tokens.json`, `site-data.json`); refined HueKit landing CSS in `app/globals.css` (`--hue-body-muted`, 720px column, 64px section / 80px footer rhythm, 30/20/16px heading scale, 16px body #525252, 12px mono code blocks, table padding, 36px CTA pill) from scraped `typographyScale` / `spacingScale` while keeping Inter and HueKit content in `components/landing/LandingPage.tsx`. Aligns docs page with live DialKit reference after proper Playwright scrape.
+
+## 10:00 [06-07-2026]
+
+- HueKit UX polish: portaled viewport-aware toolbar tooltips (`ToolbarTip.tsx`) so labels are not clipped by panel overflow; Inter via `next/font` replaces Aeonik; fixed-height HSL/Hex controls (`huekit-format-controls`, `WheelPicker.tsx`); system light/dark panel tokens (`lib/huekit-theme.ts`, `data-theme` on `HueKitRoot`); DialKit-style landing restructure (Usage, Features table, agent prompt, `globals.css` prefers-color-scheme). Solves tooltip cutoff, format jump, accessibility font, theme mismatch, and docs page parity with DialKit rhythm.
+
+## 09:36 [06-07-2026]
+
+- Disabled Vercel Deployment Protection (`ssoProtection: null`) on the `color-search` project so `huekits.vercel.app` and all deployment URLs load without login. Solves SSO redirect blocking public preview links.
+
 ## 09:30 [06-07-2026]
 
 - Palette toolbar UX: moved saved-palettes control after eyedropper/reset/copy as a wider 32px pill with icon + label (`HueKitRoot.tsx`, `PaletteMenu.tsx`, `huekit-panel.css`); HSL/Hex toggle gets sliding pill + crossfading readout/controls (`WheelPicker.tsx`). Solves easy-to-miss compact icon and abrupt format switch.

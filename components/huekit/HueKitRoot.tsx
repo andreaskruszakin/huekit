@@ -12,6 +12,7 @@ import { ToolbarTip } from "@/components/huekit/ToolbarTip";
 import { WheelPicker } from "@/components/huekit/WheelPicker";
 import { loadBubblePos, saveBubblePos, useColorVars } from "@/components/huekit/useColorVars";
 import { parseColor } from "@/lib/huekit-color";
+import { useHueKitTheme } from "@/lib/huekit-theme";
 import { PANEL_EXIT, SPRING } from "@/lib/huekit-preset";
 import "./huekit-panel.css";
 
@@ -49,6 +50,7 @@ export function HueKitRoot() {
   const drag = useRef({ dx: 0, dy: 0, active: false, moved: false, fromHeader: false });
   const panelRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const theme = useHueKitTheme();
 
   const {
     vars, selected, setSelected, selectedVar, resetVar, resetAll,
@@ -161,7 +163,7 @@ export function HueKitRoot() {
   const rightOffset = panelWidth - BUBBLE_SIZE;
 
   return (
-    <div className="huekit-root fixed inset-0 z-50 pointer-events-none">
+    <div className="huekit-root fixed inset-0 z-50 pointer-events-none" data-theme={theme}>
       <motion.div
         className="pointer-events-auto absolute"
         style={{ left: pos.x, top: pos.y }}

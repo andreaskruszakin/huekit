@@ -217,7 +217,7 @@ export function WheelPicker({
           ) : (
             <motion.label
               key="hex"
-              className="huekit-hex-input-row huekit-format-panel"
+              className="huekit-hex-input-row huekit-format-panel huekit-format-panel-hex"
               initial={reduce ? false : { opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reduce ? undefined : { opacity: 0, y: -4 }}

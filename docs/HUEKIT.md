@@ -84,7 +84,7 @@ Drag clamping uses **visual panel bounds** (accounts for right-origin negative m
 ## Browser notes
 
 - **EyeDropper API:** Chrome/Edge only; button disabled elsewhere.
-- **Fonts:** Aeonik Pro in panel and landing; CSS var names stay monospace.
+- **Fonts:** Inter in panel chrome; CSS var names stay monospace. Docs site: [huekits.vercel.app](https://huekits.vercel.app).
 - **Production:** mount only in dev or gate behind an env flag if you do not want the overlay in production builds.
 
 ## File map
