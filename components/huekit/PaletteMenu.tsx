@@ -72,6 +72,7 @@ export function PaletteMenu({
     setSaveName("");
   }
 
+  const label = activePalette ? activePalette.name : "Palettes";
   const tipLabel = activePalette ? activePalette.name : "Saved palettes";
 
   return (
@@ -80,13 +81,14 @@ export function PaletteMenu({
         <button
           type="button"
           className="huekit-toolbar-btn huekit-palette-toolbar-btn"
-          aria-label="Saved palettes"
+          aria-label={activePalette ? `Palette: ${activePalette.name}` : "Saved palettes"}
           aria-haspopup="menu"
           aria-expanded={open}
           data-active={!!activePaletteId}
           onClick={() => setOpen((o) => !o)}
         >
           <IconPalette />
+          <span className="huekit-palette-btn-label">{label}</span>
         </button>
       </ToolbarTip>
 

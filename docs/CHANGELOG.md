@@ -1,5 +1,9 @@
 # Changelog
 
+## 09:30 [06-07-2026]
+
+- Palette toolbar UX: moved saved-palettes control after eyedropper/reset/copy as a wider 32px pill with icon + label (`HueKitRoot.tsx`, `PaletteMenu.tsx`, `huekit-panel.css`); HSL/Hex toggle gets sliding pill + crossfading readout/controls (`WheelPicker.tsx`). Solves easy-to-miss compact icon and abrupt format switch.
+
 ## 09:20 [06-07-2026]
 
 - Toolbar palette control: `PaletteMenu` moved into icon toolbar as compact palette button with amber active dot, dropdown anchored to button (`PaletteMenu.tsx`, `huekit-panel.css`, `IconPalette`). OG color-search prototype split to [color-search-prototype](https://github.com/andreaskruszakin/color-search-prototype); removed `SearchBar`, `ColorWheelPopover`, `prototypes/`; slimmed wheel constants to `lib/huekit-preset.ts`.

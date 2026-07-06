@@ -59,6 +59,8 @@ function Slider({ label, value, min, max, onChange }: {
 }
 
 function FormatToggle({ mode, onChange }: { mode: ColorFormat; onChange: (m: ColorFormat) => void }) {
+  const reduce = useReducedMotion();
+
   return (
     <div className="huekit-format-toggle" role="group" aria-label="Color format">
       {(["hsl", "hex"] as const).map((m) => (
@@ -69,7 +71,14 @@ function FormatToggle({ mode, onChange }: { mode: ColorFormat; onChange: (m: Col
           data-active={mode === m}
           onClick={() => onChange(m)}
         >
-          {m.toUpperCase()}
+          {mode === m && !reduce && (
+            <motion.span
+              layoutId="huekit-format-pill"
+              className="huekit-format-pill"
+              transition={{ type: "spring", visualDuration: 0.2, bounce: 0.12 }}
+            />
+          )}
+          <span className="huekit-format-btn-label">{m.toUpperCase()}</span>
         </button>
       ))}
     </div>
@@ -173,33 +182,63 @@ export function WheelPicker({
 
       <div className="mt-3 flex items-center justify-between gap-2">
         <FormatToggle mode={format} onChange={pickFormat} />
-        <span className="huekit-color-readout" title={formatColor(hsl, format)}>
-          {formatColor(hsl, format)}
+        <span className="huekit-color-readout">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={format}
+              className="huekit-color-readout-value"
+              title={formatColor(hsl, format)}
+              initial={reduce ? false : { opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -3 }}
+              transition={{ duration: reduce ? 0 : 0.16, ease: "easeOut" }}
+            >
+              {formatColor(hsl, format)}
+            </motion.span>
+          </AnimatePresence>
         </span>
       </div>
 
-      {format === "hsl" ? (
-        <div className="mt-1 space-y-1">
-          <Slider label="H" value={Math.round(hsl.h)} min={0} max={360} onChange={(h) => onChange({ ...hsl, h })} />
-          <Slider label="S" value={Math.round(hsl.s)} min={0} max={100} onChange={(s) => onChange({ ...hsl, s })} />
-          <Slider label="L" value={Math.round(hsl.l)} min={0} max={100} onChange={(l) => onChange({ ...hsl, l })} />
-        </div>
-      ) : (
-        <label className="huekit-hex-input-row mt-2">
-          <span className="sr-only">Hex color</span>
-          <input
-            type="text"
-            className="huekit-hex-input"
-            value={hexInput}
-            spellCheck={false}
-            onChange={(e) => {
-              setHexInput(e.target.value);
-              commitHex(e.target.value);
-            }}
-            onBlur={() => setHexInput(hslToHex(hsl.h, hsl.s, hsl.l))}
-          />
-        </label>
-      )}
+      <div className="huekit-format-controls">
+        <AnimatePresence mode="wait" initial={false}>
+          {format === "hsl" ? (
+            <motion.div
+              key="hsl"
+              className="huekit-format-panel space-y-1"
+              initial={reduce ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: reduce ? 0 : 0.18, ease: "easeOut" }}
+            >
+              <Slider label="H" value={Math.round(hsl.h)} min={0} max={360} onChange={(h) => onChange({ ...hsl, h })} />
+              <Slider label="S" value={Math.round(hsl.s)} min={0} max={100} onChange={(s) => onChange({ ...hsl, s })} />
+              <Slider label="L" value={Math.round(hsl.l)} min={0} max={100} onChange={(l) => onChange({ ...hsl, l })} />
+            </motion.div>
+          ) : (
+            <motion.label
+              key="hex"
+              className="huekit-hex-input-row huekit-format-panel"
+              initial={reduce ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: reduce ? 0 : 0.18, ease: "easeOut" }}
+            >
+              <span className="sr-only">Hex color</span>
+              <input
+                type="text"
+                className="huekit-hex-input"
+                value={hexInput}
+                spellCheck={false}
+                onChange={(e) => {
+                  setHexInput(e.target.value);
+                  commitHex(e.target.value);
+                }}
+                onBlur={() => setHexInput(hslToHex(hsl.h, hsl.s, hsl.l))}
+              />
+            </motion.label>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="huekit-scale-grid huekit-scale-grid-compact">
         {shadeScale(hsl.h, hsl.s).map((css, i) => (

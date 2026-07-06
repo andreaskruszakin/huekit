@@ -231,6 +231,39 @@ export function HueKitRoot() {
                   </ToolbarTip>
                 </div>
                 <div className="huekit-toolbar">
+                  <div className="huekit-toolbar-icons">
+                    <ToolbarTip label="Eyedropper">
+                      <button
+                        type="button"
+                        aria-label="Pick color from screen"
+                        className="huekit-toolbar-btn"
+                        disabled={!selected || !hasEyedropper}
+                        onClick={eyedropper}
+                      >
+                        <IconEyedropper />
+                      </button>
+                    </ToolbarTip>
+                    <ToolbarTip label="Reset all">
+                      <button
+                        type="button"
+                        aria-label="Reset all variables"
+                        className="huekit-toolbar-btn"
+                        onClick={resetAll}
+                      >
+                        <IconReset />
+                      </button>
+                    </ToolbarTip>
+                    <ToolbarTip label={copied ? "Copied!" : "Copy CSS"}>
+                      <button
+                        type="button"
+                        aria-label="Copy CSS block"
+                        className="huekit-toolbar-btn"
+                        onClick={handleCopy}
+                      >
+                        <IconCopySwap copied={copied} />
+                      </button>
+                    </ToolbarTip>
+                  </div>
                   <PaletteMenu
                     palettes={palettes}
                     activePaletteId={activePaletteId}
@@ -241,37 +274,6 @@ export function HueKitRoot() {
                     onRename={renamePalette}
                     onDelete={deletePalette}
                   />
-                  <ToolbarTip label="Eyedropper">
-                    <button
-                      type="button"
-                      aria-label="Pick color from screen"
-                      className="huekit-toolbar-btn"
-                      disabled={!selected || !hasEyedropper}
-                      onClick={eyedropper}
-                    >
-                      <IconEyedropper />
-                    </button>
-                  </ToolbarTip>
-                  <ToolbarTip label="Reset all">
-                    <button
-                      type="button"
-                      aria-label="Reset all variables"
-                      className="huekit-toolbar-btn"
-                      onClick={resetAll}
-                    >
-                      <IconReset />
-                    </button>
-                  </ToolbarTip>
-                  <ToolbarTip label={copied ? "Copied!" : "Copy CSS"}>
-                    <button
-                      type="button"
-                      aria-label="Copy CSS block"
-                      className="huekit-toolbar-btn"
-                      onClick={handleCopy}
-                    >
-                      <IconCopySwap copied={copied} />
-                    </button>
-                  </ToolbarTip>
                 </div>
               </header>
 
