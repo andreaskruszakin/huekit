@@ -27,6 +27,7 @@ const PANEL_WIDTH = 280;
 const PANEL_EXPANDED = 520;
 const WHEEL_COL = 240;
 const FALLBACK_PANEL_H = 420;
+const DRAG_THRESHOLD = 5;
 
 function visualLeft(x: number, origin: "left" | "right", open: boolean, panelW: number) {
   if (!open || origin === "left") return x;
@@ -47,7 +48,7 @@ export function HueKitRoot() {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ x: 16, y: 16 });
   const [copied, setCopied] = useState(false);
-  const drag = useRef({ dx: 0, dy: 0, active: false, moved: false, fromHeader: false });
+  const drag = useRef({ dx: 0, dy: 0, sx: 0, sy: 0, active: false, moved: false, fromHeader: false });
   const panelRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const theme = useHueKitTheme();
@@ -98,20 +99,23 @@ export function HueKitRoot() {
 
   const onBubblePointerDown = useCallback((e: React.PointerEvent) => {
     if (open) return;
-    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false, fromHeader: false };
+    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, sx: e.clientX, sy: e.clientY, active: true, moved: false, fromHeader: false };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [open, pos]);
 
   const onHeaderPointerDown = useCallback((e: React.PointerEvent) => {
     const t = e.target as HTMLElement;
     if (t.closest("button, input, .huekit-palette-menu")) return;
-    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, active: true, moved: false, fromHeader: true };
+    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, sx: e.clientX, sy: e.clientY, active: true, moved: false, fromHeader: true };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [pos]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!drag.current.active) return;
-    drag.current.moved = true;
+    if (Math.hypot(e.clientX - drag.current.sx, e.clientY - drag.current.sy) > DRAG_THRESHOLD) {
+      drag.current.moved = true;
+    }
+    if (!drag.current.moved) return;
     const fromHeader = drag.current.fromHeader;
     const w = fromHeader ? panelWidth : BUBBLE_SIZE;
     const h = fromHeader ? getPanelHeight() : BUBBLE_SIZE;

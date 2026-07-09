@@ -1,5 +1,9 @@
 # Changelog
 
+## 14:46 [09-07-2026]
+
+- Fixed bubble sometimes not opening on click: `components/huekit/HueKitRoot.tsx` now only marks a gesture as a drag once the pointer moves past `DRAG_THRESHOLD` (5px), stored via `sx`/`sy` in the `drag` ref. Previously any sub-pixel jitter set `moved = true`, so `onClick` refused to open. Drag still works; jitter clicks reliably open now.
+
 ## 10:40 [06-07-2026]
 
 - Split repos: `huekit` is install-only product (`components/huekit/`, `lib/`, minimal demo in `app/page.tsx`); docs/marketing site moved to [huekit-landing](https://github.com/andreaskruszakin/huekit-landing) at https://huekits.vercel.app. Removed `components/landing/`, landing CSS from `app/globals.css`; README links to docs site. Ships UX polish (tooltips, Inter, light/dark, HSL/hex height) as installable module.
